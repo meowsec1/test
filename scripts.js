@@ -17,59 +17,74 @@ function evaluate(a, b, operator) {
 var numButtons = document.querySelectorAll(".num");
 var operatorButtons = document.querySelectorAll(".operator");
 var calcView = document.querySelector("input");
-var clearButton = document.querySelector(".clear");
-var evalButton = document.querySelector(".eval");
-var current_operation = null;
-var first_number = null;
-var second_number = null;
-clearButton.addEventListener("click", function () { return calcView.value = ''; });
+var currentOperation = null;
+var firstNumber = null;
+var secondNumber = null;
+var result = null;
+var shouldChain = false;
+var onFirstNumber = true;
 var _loop_1 = function (numButton) {
     numButton.addEventListener("click", function () {
+        if (shouldChain) {
+            calcView.value = '';
+            shouldChain = false;
+        }
         calcView.value += numButton.innerHTML;
+        if (onFirstNumber) {
+            firstNumber = Number(calcView.value);
+            console.log("First number: ", firstNumber);
+        }
+        else {
+            secondNumber = Number(calcView.value);
+            console.log("Second number: ", secondNumber);
+        }
     });
 };
-// on number press
 for (var _i = 0, numButtons_1 = numButtons; _i < numButtons_1.length; _i++) {
     var numButton = numButtons_1[_i];
     _loop_1(numButton);
 }
 var _loop_2 = function (operatorButton) {
     operatorButton.addEventListener("click", function () {
-        if (current_operation) {
-            // We have a pending operation
-            if (first_number && calcView.value !== '') {
-                // Get second number from current display
-                second_number = Number(calcView.value);
-                // Evaluate the pending operation
-                var result = evaluate(first_number, second_number, current_operation);
+        if (operatorButton.innerHTML == "c") {
+            calcView.value = '';
+            result = null;
+            firstNumber = null;
+            secondNumber = null;
+            onFirstNumber = true;
+        }
+        else if (operatorButton.innerHTML == "=") {
+            if (firstNumber && secondNumber && currentOperation) {
+                result = evaluate(firstNumber, secondNumber, currentOperation);
                 calcView.value = result.toString();
-                console.log("Result: ", calcView.value);
-                // Set up for next operation
-                first_number = result;
-                second_number = null;
-                current_operation = operatorButton.innerHTML;
-                calcView.value = ''; // Clear for next number input
+                firstNumber = result;
+                secondNumber = null;
+                onFirstNumber = false;
+                console.log("Result: ", result);
             }
         }
         else {
-            // No pending operation
-            if (calcView.value === '') {
+            if (!firstNumber) {
                 console.log("Do nothing");
             }
-            else {
-                // Store first number and set operation
-                first_number = Number(calcView.value);
-                console.log("First number", first_number);
-                current_operation = operatorButton.innerHTML;
-                calcView.value = ''; // Clear for second number input
+            else if (!secondNumber) {
+                onFirstNumber = false;
+                calcView.value = '';
+                currentOperation = operatorButton.innerHTML;
+            }
+            else if (firstNumber && secondNumber) {
+                currentOperation = operatorButton.innerHTML;
+                result = evaluate(firstNumber, secondNumber, currentOperation);
+                calcView.value = result.toString();
+                firstNumber = result;
+                secondNumber = null;
+                onFirstNumber = false;
+                console.log("Result: ", result);
+                shouldChain = true;
             }
         }
     });
 };
-// on operator press
-// make current operator the operator pressed
-// store numbers in variables
-// if already have current operator, compute based on last operator
 for (var _a = 0, operatorButtons_1 = operatorButtons; _a < operatorButtons_1.length; _a++) {
     var operatorButton = operatorButtons_1[_a];
     _loop_2(operatorButton);

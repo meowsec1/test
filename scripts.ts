@@ -20,65 +20,84 @@ const numButtons = document.querySelectorAll(".num");
 const operatorButtons = document.querySelectorAll(".operator");
 
 const calcView = document.querySelector("input")!;
-const clearButton = document.querySelector(".clear")!;
-const evalButton = document.querySelector(".eval")!;
-
-let current_operation: string | null = null;
-let first_number: number | null = null;
-let second_number: number | null = null;
 
 
+let currentOperation: string | null = null;
+let firstNumber: number | null = null;
+let secondNumber: number | null = null;
+let result: number | null = null;
+let shouldChain: boolean = false;
 
-clearButton.addEventListener("click", () => calcView.value = '')
+let onFirstNumber: boolean = true;
 
-
-// on number press
 
 for (const numButton of numButtons)
 {
     numButton.addEventListener("click", function(){
+        if (shouldChain)
+        {
+            calcView.value = '';
+            shouldChain = false;
+        }
         calcView.value += numButton.innerHTML;
+        if (onFirstNumber)
+        {
+            firstNumber = Number(calcView.value);
+            console.log("First number: ", firstNumber);
+        }
+        else
+        {
+            secondNumber = Number(calcView.value);
+            console.log("Second number: ", secondNumber);
+        }
     })
 }
 
-// on operator press
-// make current operator the operator pressed
-// store numbers in variables
-// if already have current operator, compute based on last operator
+
 for (const operatorButton of operatorButtons) {
     operatorButton.addEventListener("click", function(){
+        if (operatorButton.innerHTML == "c") {
+            calcView.value = '';
+            result = null;
+            firstNumber = null;
+            secondNumber = null;
+            onFirstNumber = true;
+        }
 
-        if (current_operation) {
-            // We have a pending operation
-            if (first_number && calcView.value !== '') {
-                // Get second number from current display
-                second_number = Number(calcView.value);
-                
-                // Evaluate the pending operation
-                const result = evaluate(first_number, second_number, current_operation);
+        else if (operatorButton.innerHTML == "=") 
+        {
+            if (firstNumber && secondNumber && currentOperation)
+            {
+                result = evaluate(firstNumber, secondNumber, currentOperation);
                 calcView.value = result.toString();
-                console.log("Result: ", calcView.value);
-                
-                // Set up for next operation
-                first_number = result;
-                second_number = null;
-                
-                current_operation = operatorButton.innerHTML;
-                calcView.value = ''; // Clear for next number input
+                firstNumber = result;
+                secondNumber = null;
+                onFirstNumber = false;
+                console.log("Result: ", result);
+
             }
         }
+
         else {
-            // No pending operation
-            if (calcView.value === '') {
+            if (!firstNumber) {
                 console.log("Do nothing");
             }
-            else {
-                // Store first number and set operation
-                first_number = Number(calcView.value);
-                console.log("First number", first_number);
-                
-                current_operation = operatorButton.innerHTML;
-                calcView.value = ''; // Clear for second number input
+
+            else if (!secondNumber) {
+                onFirstNumber = false;
+                calcView.value = '';
+                currentOperation = operatorButton.innerHTML;
+            }
+            else if (firstNumber && secondNumber)
+            {
+                currentOperation = operatorButton.innerHTML;
+                result = evaluate(firstNumber, secondNumber, currentOperation);
+                calcView.value = result.toString();
+                firstNumber = result;
+                secondNumber = null;
+                onFirstNumber = false;
+                console.log("Result: ", result);
+                shouldChain = true;
             }
         }
     })
